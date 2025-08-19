@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm kiếm lịch học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body{background:#f8fafc}.main-card{max-width:700px;margin:40px auto;padding:32px;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}</style>
+</head>
+<body>
+<div class="main-card bg-white">
+    <h2 class="mb-4">Tìm kiếm lịch học</h2>
+    <div class="input-group mb-3">
+        <input type="text" id="keyword" class="form-control" placeholder="Nhập tên môn học...">
+        <button class="btn btn-primary" onclick="search()">Tìm kiếm</button>
+    </div>
+    <div id="search_result">Nhập từ khóa để tìm kiếm.</div>
+    <a href="/" class="btn btn-secondary mt-3">Quay lại trang chủ</a>
+</div>
+<script>
+function search(){
+    let kw = document.getElementById('keyword').value;
+    document.getElementById('search_result').textContent = 'Đang tải...';
+    fetch('/api/search?keyword='+encodeURIComponent(kw)).then(r=>r.json()).then(data=>{
+        if(data.error){document.getElementById('search_result').textContent=data.message;return;}
+        if(data.results.length===0){document.getElementById('search_result').textContent='Không tìm thấy.';return;}
+        let html = '<table class="table"><thead><tr><th>Môn</th><th>Ngày</th><th>Phòng</th><th>Giờ</th></tr></thead><tbody>';
+        data.results.forEach(e=>{html+=`<tr><td>${e.subject}</td><td>${e.date}</td><td>${e.room}</td><td>${e.time}</td></tr>`});
+        html+='</tbody></table>';
+        document.getElementById('search_result').innerHTML=html;
+    });
+}
+</script>
+</body>
+</html>
