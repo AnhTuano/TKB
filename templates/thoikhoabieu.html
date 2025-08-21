@@ -2,11 +2,12 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thời khóa biểu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background: #f7f7f9; }
-        .main-card { max-width: 1100px; margin: 40px auto; padding: 28px; border-radius: 14px; box-shadow: 0 2px 8px #0001; background: #fff; }
+        body { background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%); }
+        .main-card { max-width: 1100px; margin: 40px auto; padding: 36px 32px 28px 32px; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); background: #fff; }
         .tkb-card-list { display: flex; flex-direction: column; gap: 18px; margin-top: 18px; }
         .tkb-card {
             background: linear-gradient(90deg, #e3fdfd 0%, #cbf1f5 100%);
@@ -58,119 +59,93 @@
             text-decoration: underline;
         }
         .tkb-card .tkb-date {
-            position: absolute;
-            top: 12px;
-            right: 22px;
             font-size: 0.97rem;
             color: #00838f;
             font-weight: 500;
-        }
-        .tkb-year-select {
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .tkb-year-select label {
-            font-weight: 500;
-            color: #00838f;
-        }
-        .tkb-year-select select {
-            border-radius: 7px;
-            border: 1px solid #b2ebf2;
-            padding: 4px 12px;
-            font-size: 1rem;
-        }
-        @media (max-width: 768px) {
-            .main-card { padding: 8px; }
-            .tkb-card { flex-direction: column; gap: 8px; padding: 12px 10px 10px 10px; }
-            .tkb-card .tkb-date { position: static; margin-top: 6px; text-align: right; }
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
-<div class="main-card bg-white">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+<div class="main-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Thời khóa biểu</h2>
-        <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#timeTableModal">
-                Xem Thời Gian Biểu
-            </button>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#tietModal">Thời gian biểu</button>
             <button id="refreshTKB" class="btn btn-outline-primary" type="button">Làm mới TKB</button>
             <a href="/" class="btn btn-outline-primary">Trang chủ</a>
         </div>
     </div>
-        <div class="tkb-year-select">
-            <label for="yearSelect">Năm:</label>
-            <select id="yearSelect"></select>
-            <label for="monthSelect" style="margin-left:10px;">Tháng:</label>
-            <select id="monthSelect">
-                <option value="">Tất cả</option>
-                <option value="01">01</option>
-                <option value="02">02</option>
-                <option value="03">03</option>
-                <option value="04">04</option>
-                <option value="05">05</option>
-                <option value="06">06</option>
-                <option value="07">07</option>
-                <option value="08">08</option>
-                <option value="09">09</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <select id="yearSelect" class="form-select"></select>
+        </div>
+        <div class="col-md-3">
+            <select id="monthSelect" class="form-select">
+                <option value="">Tất cả các tháng</option>
+                <option value="01">Tháng 1</option>
+                <option value="02">Tháng 2</option>
+                <option value="03">Tháng 3</option>
+                <option value="04">Tháng 4</option>
+                <option value="05">Tháng 5</option>
+                <option value="06">Tháng 6</option>
+                <option value="07">Tháng 7</option>
+                <option value="08">Tháng 8</option>
+                <option value="09">Tháng 9</option>
+                <option value="10">Tháng 10</option>
+                <option value="11">Tháng 11</option>
+                <option value="12">Tháng 12</option>
             </select>
         </div>
-        <div id="tkb_card_list" class="tkb-card-list">Đang tải...</div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="timeTableModal" tabindex="-1" aria-labelledby="timeTableModalLabel" aria-hidden="true">
-    <!-- Có thể bổ sung modal hoặc chức năng khác ở đây nếu cần -->
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="timeTableModalLabel">Thời Gian Biểu Chi Tiết</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <table class="table table-bordered table-striped align-middle">
-                    <thead>
-                        <tr>
-                            <th>Tiết</th>
-                            <th>Bắt đầu</th>
-                            <th>Kết thúc</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>1</td><td>6:45</td><td>7:35</td></tr>
-                        <tr><td>2</td><td>7:40</td><td>8:30</td></tr>
-                        <tr><td>3</td><td>8:40</td><td>9:30</td></tr>
-                        <tr><td>4</td><td>9:40</td><td>10:30</td></tr>
-                        <tr><td>5</td><td>10:35</td><td>11:25</td></tr>
-                        <tr><td>6</td><td>13:00</td><td>13:50</td></tr>
-                        <tr><td>7</td><td>13:55</td><td>14:45</td></tr>
-                        <tr><td>8</td><td>14:55</td><td>15:45</td></tr>
-                        <tr><td>9</td><td>15:55</td><td>16:45</td></tr>
-                        <tr><td>10</td><td>16:50</td><td>17:40</td></tr>
-                        <tr><td>11</td><td>18:15</td><td>19:05</td></tr>
-                        <tr><td>12</td><td>19:10</td><td>20:00</td></tr>
-                        <tr><td>13</td><td>20:05</td><td>20:55</td></tr>
-                        <tr><td>14</td><td>20:20</td><td>21:10</td></tr>
-                        <tr><td>15</td><td>21:20</td><td>22:10</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-            </div>
-        </div>
     </div>
+    <div class="tkb-card-list" id="tkbCardList">Đang tải...</div>
 </div>
 
+<!-- Modal Tiết học -->
+<div class="modal fade" id="tietModal" tabindex="-1" aria-labelledby="tietModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="tietModalLabel">Thời gian biểu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-bordered table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Tiết</th>
+                    <th>Bắt đầu</th>
+                    <th>Kết thúc</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>6:45</td><td>7:35</td></tr>
+                <tr><td>2</td><td>7:40</td><td>8:30</td></tr>
+                <tr><td>3</td><td>8:40</td><td>9:30</td></tr>
+                <tr><td>4</td><td>9:40</td><td>10:30</td></tr>
+                <tr><td>5</td><td>10:35</td><td>11:25</td></tr>
+                <tr><td>6</td><td>13:00</td><td>13:50</td></tr>
+                <tr><td>7</td><td>13:55</td><td>14:45</td></tr>
+                <tr><td>8</td><td>14:55</td><td>15:45</td></tr>
+                <tr><td>9</td><td>15:55</td><td>16:45</td></tr>
+                <tr><td>10</td><td>16:50</td><td>17:40</td></tr>
+                <tr><td>11</td><td>18:15</td><td>19:05</td></tr>
+                <tr><td>12</td><td>19:10</td><td>20:00</td></tr>
+                <tr><td>13</td><td>20:05</td><td>20:55</td></tr>
+                <tr><td>14</td><td>20:20</td><td>21:10</td></tr>
+                <tr><td>15</td><td>21:20</td><td>22:10</td></tr>
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tkbCardListDiv = document.getElementById('tkb_card_list');
+    const tkbCardListDiv = document.getElementById('tkbCardList');
     const refreshBtn = document.getElementById('refreshTKB');
 
     // --- Ghi nhớ TKB bằng localStorage ---
@@ -313,3 +288,5 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchTimetable();
 });
 </script>
+</body>
+</html>
