@@ -259,6 +259,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderAllViews(cached);
                 return;
             }
+<<<<<<< HEAD
+=======
+            timetableData.sort((a, b) => {
+                let da = parseToYMD(a.from_date), db = parseToYMD(b.from_date);
+                if (da !== db) return da.localeCompare(db);
+                return (parseInt(a.tiet) || 0) - (parseInt(b.tiet) || 0);
+            });
+            let todayStr = new Date().toISOString().split('T')[0];
+            let html = '';
+            timetableData.forEach(e => {
+                let cardClass = parseToYMD(e.from_date) === todayStr ? 'tkb-card today' : 'tkb-card';
+                let d = parseToYMD(e.from_date);
+                let [y, m, day] = d.split('-');
+                html += `<div class="${cardClass}">
+                    <div class="icon">
+                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='4' fill='#00bcd4'/><rect x='7' y='8' width='10' height='2' rx='1' fill='#4dd0e1'/><rect x='7' y='12' width='6' height='2' rx='1' fill='#4dd0e1'/></svg>
+                    </div>
+                    <div class="tkb-info">
+                        <div class="tkb-title">${e.lopHocPhan || ''}</div>
+                        <div class="tkb-meta"><strong>Thứ:</strong> ${e.thoiGian || ''} &nbsp; <strong>Tiết:</strong> ${e.tiet || ''} &nbsp; <strong>Thời gian:</strong> ${e.buoiHoc || ''}</div>
+                        <div class="tkb-meta"><span class="tkb-room">${e.phong || ''}</span> <span><strong>GV:</strong> ${e.giangVien || ''}</span></div>
+                        ${e.meetLink ? `<div class="tkb-meta"><a class="tkb-link" href="${e.meetLink}" target="_blank">Link Meet</a></div>` : ''}
+                    </div>
+                    <div class="tkb-date">Ngày: ${day}/${m}/${y}</div>
+                </div>`;
+            });
+            tkbCardListDiv.innerHTML = html;
+>>>>>>> 9c82084f1c187700756fc1085b9609551a5d8243
         }
         tkbCardListDiv.innerHTML = 'Đang tải...';
         try {
