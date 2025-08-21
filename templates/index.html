@@ -18,7 +18,7 @@
         <div class="text-center">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="avatar" alt="avatar">
             <h2 class="mb-1">Chào mừng, {{ user_info.name if user_info else 'Sinh viên' }}!</h2>
-            <p class="text-muted mb-3">Mã SV: {{ user_info.studentId if user_info else '' }}</p>          
+            <p class="text-muted mb-3">Mã SV: {{ user_info.studentId if user_info else '' }}</p>
         </div>
         <ul class="nav flex-column mb-4">
             <li class="nav-item mb-2"><a class="nav-link" href="/profile">Thông tin cá nhân</a></li>

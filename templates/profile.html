@@ -8,14 +8,16 @@
 </head>
 <body>
 <div class="profile-card bg-white">
-    <h2 class="mb-3">Thông tin cá nhân</h2>
-    <ul class="list-group mb-3">
-        <li class="list-group-item">Họ tên: {{ user_info.name if user_info else '' }}</li>
-        <li class="list-group-item">Mã sinh viên: {{ user_info.studentId if user_info else '' }}</li>
-    <li class="list-group-item">Email: {{ user_info.email if user_info else '' }}</li>
-    <li class="list-group-item">Ngành: {{ user_info.major if user_info and user_info.major else 'Chưa cập nhật' }}</li>
-    </ul>
-    <a href="/" class="btn btn-secondary">Quay lại trang chủ</a>
-</div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Thông tin cá nhân</h2>
+            <a href="/" class="btn btn-outline-primary">Trang chủ</a>
+        </div>
+        <ul class="list-group mb-3">
+            <li class="list-group-item">Họ tên: {{ user_info.name if user_info else '' }}</li>
+            <li class="list-group-item">Mã sinh viên: {{ user_info.studentId if user_info else '' }}</li>
+            <li class="list-group-item">Email: {{ user_info.email if user_info else '' }}</li>
+            <li class="list-group-item">Ngành: {{ user_info.major if user_info and user_info.major else 'Chưa cập nhật' }}</li>
+        </ul>
+    </div>
 </body>
 </html>
