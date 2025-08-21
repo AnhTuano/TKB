@@ -96,6 +96,7 @@
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#timeTableModal">
                 Xem Thời Gian Biểu
             </button>
+            <button id="refreshTKB" class="btn btn-outline-primary" type="button">Làm mới TKB</button>
             <a href="/" class="btn btn-outline-primary">Trang chủ</a>
         </div>
     </div>
@@ -168,119 +169,148 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tkbCardListDiv = document.getElementById('tkb_card_list');
+document.addEventListener('DOMContentLoaded', function() {
+    const tkbCardListDiv = document.getElementById('tkb_card_list');
+    const refreshBtn = document.getElementById('refreshTKB');
 
-        // Chuyển các định dạng ngày về yyyy-mm-dd
-        function parseToYMD(dateStr) {
-            if (!dateStr) return '';
-            dateStr = dateStr.trim().split(' ')[0];
-            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-            let d, m, y;
-            if (/^\d{2}[-\/]\d{2}[-\/]\d{4}$/.test(dateStr)) {
-                [d, m, y] = dateStr.split(/[-\/]/);
-                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            }
-            if (/^\d{2}[-\/]\d{2}[-\/]\d{2}$/.test(dateStr)) {
-                [d, m, y] = dateStr.split(/[-\/]/);
-                y = (+y < 50 ? '20' : '19') + y;
-                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-            }
-            return dateStr;
+    // --- Ghi nhớ TKB bằng localStorage ---
+    function saveTKBToCache(data) {
+        localStorage.setItem('tkb_cache', JSON.stringify({data, time: Date.now()}));
+    }
+    function loadTKBFromCache() {
+        let cache = localStorage.getItem('tkb_cache');
+        if (!cache) return null;
+        try {
+            let obj = JSON.parse(cache);
+            if (Date.now() - obj.time > 24*60*60*1000) return null;
+            return obj.data;
+        } catch { return null; }
+    }
+    function clearTKBCache() {
+        localStorage.removeItem('tkb_cache');
+    }
+
+    // Chuyển các định dạng ngày về yyyy-mm-dd
+    function parseToYMD(dateStr) {
+        if (!dateStr) return '';
+        dateStr = dateStr.trim().split(' ')[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+        let d, m, y;
+        if (/^\d{2}[-\/]\d{2}[-\/]\d{4}$/.test(dateStr)) {
+            [d, m, y] = dateStr.split(/[-\/]/);
+            return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
-
-        // Định dạng ngày yyyy-mm-dd về dd/mm/yyyy
-        function formatDateVN(dateStr) {
-            if (!dateStr) return '';
-            const [y, m, d] = dateStr.split('-');
-            return `${d}/${m}/${y}`;
+        if (/^\d{2}[-\/]\d{2}[-\/]\d{2}$/.test(dateStr)) {
+            [d, m, y] = dateStr.split(/[-\/]/);
+            y = (+y < 50 ? '20' : '19') + y;
+            return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
         }
+        return dateStr;
+    }
 
-        // Sinh danh sách năm cho select
-        function renderYearSelect(timetableData) {
-            const yearSelect = document.getElementById('yearSelect');
-            let years = new Set();
-            timetableData.forEach(e => {
-                let d = parseToYMD(e.from_date);
-                if (!d) return;
-                let y = d.split('-')[0];
-                years.add(y);
-            });
-            years = Array.from(years).sort();
-            yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    // Định dạng ngày yyyy-mm-dd về dd/mm/yyyy
+    function formatDateVN(dateStr) {
+        if (!dateStr) return '';
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    // Sinh danh sách năm cho select
+    function renderYearSelect(timetableData) {
+        const yearSelect = document.getElementById('yearSelect');
+        let years = new Set();
+        timetableData.forEach(e => {
+            let d = parseToYMD(e.from_date);
+            if (!d) return;
+            let y = d.split('-')[0];
+            years.add(y);
+        });
+        years = Array.from(years).sort();
+        yearSelect.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+    }
+
+    // Hiển thị thời khóa biểu dạng card, có đủ ngày/tháng/năm
+    function renderTimetableCards(timetableData) {
+        if (!timetableData || !timetableData.length) {
+            tkbCardListDiv.innerHTML = '<div class="text-center text-secondary">Bạn chưa có thời khóa biểu.</div>';
+            return;
         }
+        timetableData.sort((a, b) => {
+            let da = parseToYMD(a.from_date), db = parseToYMD(b.from_date);
+            if (da !== db) return da.localeCompare(db);
+            return (parseInt(a.tiet) || 0) - (parseInt(b.tiet) || 0);
+        });
+        let todayStr = new Date().toISOString().split('T')[0];
+        let html = '';
+        timetableData.forEach(e => {
+            let cardClass = parseToYMD(e.from_date) === todayStr ? 'tkb-card today' : 'tkb-card';
+            let d = parseToYMD(e.from_date);
+            let [y, m, day] = d.split('-');
+            html += `<div class="${cardClass}">\n                <div class="icon">\n                    <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='4' fill='#00bcd4'/><rect x='7' y='8' width='10' height='2' rx='1' fill='#4dd0e1'/><rect x='7' y='12' width='6' height='2' rx='1' fill='#4dd0e1'/></svg>\n                </div>\n                <div class="tkb-info">\n                    <div class="tkb-title">${e.lopHocPhan || ''}</div>\n                    <div class="tkb-meta"><strong>Thứ:</strong> ${e.thoiGian || ''} &nbsp; <strong>Tiết:</strong> ${e.tiet || ''} &nbsp; <strong>Buổi:</strong> ${e.buoiHoc || ''}</div>\n                    <div class="tkb-meta"><span class="tkb-room">${e.phong || ''}</span> <span><strong>GV:</strong> ${e.giangVien || ''}</span></div>\n                    ${e.meetLink ? `<div class="tkb-meta"><a class="tkb-link" href="${e.meetLink}" target="_blank">Link Meet</a></div>` : ''}\n                </div>\n                <div class="tkb-date">Ngày: ${day}/${m}/${y}</div>\n            </div>`;
+        });
+        tkbCardListDiv.innerHTML = html;
+    }
 
-        // Hiển thị thời khóa biểu dạng card, có đủ ngày/tháng/năm
-        function renderTimetableCards(timetableData) {
-            if (!timetableData || !timetableData.length) {
-                tkbCardListDiv.innerHTML = '<div class="text-center text-secondary">Bạn chưa có thời khóa biểu.</div>';
+    // Lấy dữ liệu và hiển thị, lọc theo năm/tháng
+    async function fetchTimetable(forceRefresh=false) {
+        if (!forceRefresh) {
+            let cached = loadTKBFromCache();
+            if (cached) {
+                renderAllViews(cached);
                 return;
             }
-            timetableData.sort((a, b) => {
-                let da = parseToYMD(a.from_date), db = parseToYMD(b.from_date);
-                if (da !== db) return da.localeCompare(db);
-                return (parseInt(a.tiet) || 0) - (parseInt(b.tiet) || 0);
-            });
-            let todayStr = new Date().toISOString().split('T')[0];
-            let html = '';
-            timetableData.forEach(e => {
-                let cardClass = parseToYMD(e.from_date) === todayStr ? 'tkb-card today' : 'tkb-card';
-                let d = parseToYMD(e.from_date);
-                let [y, m, day] = d.split('-');
-                html += `<div class="${cardClass}">
-                    <div class="icon">
-                        <svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' fill='none' viewBox='0 0 24 24'><rect x='3' y='4' width='18' height='16' rx='4' fill='#00bcd4'/><rect x='7' y='8' width='10' height='2' rx='1' fill='#4dd0e1'/><rect x='7' y='12' width='6' height='2' rx='1' fill='#4dd0e1'/></svg>
-                    </div>
-                    <div class="tkb-info">
-                        <div class="tkb-title">${e.lopHocPhan || ''}</div>
-                        <div class="tkb-meta"><strong>Thứ:</strong> ${e.thoiGian || ''} &nbsp; <strong>Tiết:</strong> ${e.tiet || ''} &nbsp; <strong>Buổi:</strong> ${e.buoiHoc || ''}</div>
-                        <div class="tkb-meta"><span class="tkb-room">${e.phong || ''}</span> <span><strong>GV:</strong> ${e.giangVien || ''}</span></div>
-                        ${e.meetLink ? `<div class="tkb-meta"><a class="tkb-link" href="${e.meetLink}" target="_blank">Link Meet</a></div>` : ''}
-                    </div>
-                    <div class="tkb-date">Ngày: ${day}/${m}/${y}</div>
-                </div>`;
-            });
-            tkbCardListDiv.innerHTML = html;
         }
-
-        // Lấy dữ liệu và hiển thị, lọc theo năm/tháng
-        async function fetchTimetable() {
-            tkbCardListDiv.innerHTML = 'Đang tải...';
-            try {
-                const response = await fetch('/api/timetable');
-                const data = await response.json();
-                if (data.error) {
-                    tkbCardListDiv.textContent = data.message || 'Lỗi tải thời khóa biểu';
-                    return;
-                }
-                if (!data.timetable || data.timetable.length === 0) {
-                    tkbCardListDiv.textContent = data.message || 'Bạn chưa có thời khóa biểu.';
-                    return;
-                }
-                renderYearSelect(data.timetable);
-                let yearSelect = document.getElementById('yearSelect');
-                let monthSelect = document.getElementById('monthSelect');
-                function filterAndRender() {
-                    let y = yearSelect.value;
-                    let m = monthSelect.value;
-                    let filtered = data.timetable.filter(e => {
-                        let d = parseToYMD(e.from_date);
-                        if (!d.startsWith(y)) return false;
-                        if (m && d.split('-')[1] !== m) return false;
-                        return true;
-                    });
-                    renderTimetableCards(filtered);
-                }
-                filterAndRender();
-                yearSelect.onchange = filterAndRender;
-                monthSelect.onchange = filterAndRender;
-            } catch (error) {
-                console.error('Failed to fetch timetable:', error);
-                tkbCardListDiv.textContent = 'Không thể tải thời khóa biểu. Vui lòng thử lại sau.';
+        tkbCardListDiv.innerHTML = 'Đang tải...';
+        try {
+            const response = await fetch('/api/timetable');
+            const data = await response.json();
+            if (data.error) {
+                tkbCardListDiv.textContent = data.message || 'Lỗi tải thời khóa biểu';
+                return;
             }
+            if (!data.timetable || data.timetable.length === 0) {
+                tkbCardListDiv.textContent = data.message || 'Bạn chưa có thời khóa biểu.';
+                return;
+            }
+            saveTKBToCache(data.timetable);
+            renderAllViews(data.timetable);
+        } catch (error) {
+            console.error('Failed to fetch timetable:', error);
+            tkbCardListDiv.textContent = 'Không thể tải thời khóa biểu. Vui lòng thử lại sau.';
         }
-        fetchTimetable();
-    });
+    }
+
+    // Hiển thị và lọc theo năm/tháng
+    function renderAllViews(timetable) {
+        renderYearSelect(timetable);
+        let yearSelect = document.getElementById('yearSelect');
+        let monthSelect = document.getElementById('monthSelect');
+        function filterAndRender() {
+            let y = yearSelect.value;
+            let m = monthSelect.value;
+            let filtered = timetable.filter(e => {
+                let d = parseToYMD(e.from_date);
+                if (!d.startsWith(y)) return false;
+                if (m && d.split('-')[1] !== m) return false;
+                return true;
+            });
+            renderTimetableCards(filtered);
+        }
+        filterAndRender();
+        yearSelect.onchange = filterAndRender;
+        monthSelect.onchange = filterAndRender;
+    }
+
+    // Nút làm mới
+    if (refreshBtn) {
+        refreshBtn.onclick = function() {
+            clearTKBCache();
+            fetchTimetable(true);
+        };
+    }
+
+    // Khi vào trang, ưu tiên cache
+    fetchTimetable();
+});
 </script>
-</body>
-</html>
+        }

@@ -15,65 +15,18 @@ class ICTUService:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         })
-        self.session_file = 'ictu_session.pkl'
         self.is_logged_in = False
         self.session_url_base = None
         self.last_username = None
         self.last_password = None
-        self._load_session()
 
+    # Bỏ hoàn toàn lưu session ra file để tránh xung đột nhiều người dùng
     def _save_session(self, username, password):
-        """Lưu session và thông tin đăng nhập"""
-        try:
-            session_data = {
-                'cookies': self.session.cookies.get_dict(),
-                'is_logged_in': self.is_logged_in,
-                'session_url_base': self.session_url_base,
-                'username': self.last_username,
-                'password': self.last_password,  # Lưu để auto-relogin
-                'saved_time': datetime.now().isoformat()
-            }
-            
-            with open(self.session_file, 'wb') as f:
-                pickle.dump(session_data, f)
-                
-            print(f"[DEBUG] Session saved to {self.session_file}")
-            
-        except Exception as e:
-            print(f"[ERROR] Failed to save session: {e}")
+        pass
     
+    # Bỏ hoàn toàn đọc session từ file để tránh xung đột nhiều người dùng
     def _load_session(self):
-        """Tải session từ file nếu có"""
-        try:
-            if os.path.exists(self.session_file):
-                with open(self.session_file, 'rb') as f:
-                    session_data = pickle.load(f)
-                
-                # Khôi phục thông tin phiên làm việc
-                self.session.cookies.update(session_data['cookies'])
-                self.is_logged_in = session_data.get('is_logged_in', False)
-                self.session_url_base = session_data.get('session_url_base')
-                self.last_username = session_data.get('username')
-                self.last_password = session_data.get('password')
-                
-                print(f"[DEBUG] Session loaded from {self.session_file}")
-                
-                # Kiểm tra tính hợp lệ của phiên làm việc
-                if self.is_logged_in:
-                    valid = self._validate_session()
-                    if not valid:
-                        print(f"[DEBUG] Session is not valid, need to login again")
-                        self.is_logged_in = False
-                        self.session_url_base = None
-                        self.last_username = None
-                        self.last_password = None
-                        os.remove(self.session_file)  # Xóa file session không hợp lệ
-            
-            return self.is_logged_in
-        
-        except Exception as e:
-            print(f"[ERROR] Failed to load session: {e}")
-            return False
+        return False
     
     def _validate_session(self):
         """Kiểm tra session có còn hợp lệ không"""
@@ -121,28 +74,16 @@ class ICTUService:
             return False
     
     def logout(self):
-        """Đăng xuất và xóa session"""
-        try:
-            self.is_logged_in = False
-            self.session_url_base = None
-            self.last_username = None
-            self.last_password = None
-            
-            # Xóa file session
-            if os.path.exists(self.session_file):
-                os.remove(self.session_file)
-                print(f"[DEBUG] Session file removed")
-                
-            # Reset session
-            self.session = requests.Session()
-            self.session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            })
-            
-            print(f"[DEBUG] Logged out successfully")
-            
-        except Exception as e:
-            print(f"[ERROR] Logout failed: {e}")
+        """Đăng xuất (không xóa file session nữa)"""
+        self.is_logged_in = False
+        self.session_url_base = None
+        self.last_username = None
+        self.last_password = None
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
+        print(f"[DEBUG] Logged out (no file session)")
     
     def _ensure_logged_in(self):
         """Đảm bảo đã đăng nhập, tự động relogin nếu cần"""
@@ -285,7 +226,7 @@ class ICTUService:
             # Lưu thông tin đăng nhập để duy trì session
             self.last_username = username
             self.last_password = password
-            self._save_session(username, password)
+            self._save_session(username, password)  # Sẽ không làm gì cả
             
             return {
                 "error": False,

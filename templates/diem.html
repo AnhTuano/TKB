@@ -19,46 +19,98 @@
 <div class="main-card bg-white">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0">Bảng điểm</h2>
-            <a href="/" class="btn btn-outline-primary">Trang chủ</a>
+            <div class="d-flex gap-2">
+                <button id="refreshScores" class="btn btn-outline-primary" type="button">Làm mới điểm</button>
+                <a href="/" class="btn btn-outline-primary">Trang chủ</a>
+            </div>
         </div>
         <div id="scores_table" class="table-responsive bg-light rounded-3 p-3 shadow-sm">Đang tải...</div>
 </div>
 </script>
 <script>
-fetch('/api/scores').then(r=>r.json()).then(data=>{
-    if(data.error){document.getElementById('scores_table').textContent=data.message;return;}
-    let html = '';
-    // Bảng chi tiết điểm từng môn
-    if(Array.isArray(data.diemSoData)) {
-        html += '<h5>Chi tiết điểm từng môn</h5>';
-        html += '<table class="table table-bordered"><thead><tr><th>STT</th><th>Mã học phần</th><th>Tên học phần</th><th>Số TC</th><th>CC</th><th>THI</th><th>KTHP</th><th>Điểm chữ</th><th>Đánh giá</th></tr></thead><tbody>';
-        data.diemSoData.forEach((e, i)=>{
-            html+=`<tr>
-                <td>${i+1}</td>
-                <td>${e.maHP}</td>
-                <td>${e.tenHP}</td>
-                <td>${e.soTC}</td>
-                <td>${e.CC}</td>
-                <td>${e.THI}</td>
-                <td>${e.KTHP}</td>
-                <td>${e.diemChu}</td>
-                <td>${e.danhGia}</td>
-            </tr>`;
-        });
-        html+='</tbody></table>';
+document.addEventListener('DOMContentLoaded', function() {
+    const scoresTable = document.getElementById('scores_table');
+    const refreshBtn = document.getElementById('refreshScores');
+
+    function saveScoresToCache(data) {
+        localStorage.setItem('scores_cache', JSON.stringify({data, time: Date.now()}));
+    }
+    function loadScoresFromCache() {
+        let cache = localStorage.getItem('scores_cache');
+        if (!cache) return null;
+        try {
+            let obj = JSON.parse(cache);
+            if (Date.now() - obj.time > 24*60*60*1000) return null;
+            return obj.data;
+        } catch { return null; }
+    }
+    function clearScoresCache() {
+        localStorage.removeItem('scores_cache');
     }
 
-    // Bảng tổng kết
-    if(Array.isArray(data.tongKetData)) {
-        html += '<h5 class="mt-4">Tổng kết học tập</h5>';
-        html += '<table class="table table-striped"><thead><tr><th>Năm học</th><th>Học kỳ</th><th>TBC10</th><th>TBC4</th><th>TBTL10</th><th>TBTL4</th><th>TC</th></tr></thead><tbody>';
-        data.tongKetData.forEach(e=>{
-            html+=`<tr><td>${e.namHoc || ''}</td><td>${e.hocKy || ''}</td><td>${e.TBC10}</td><td>${e.TBC4}</td><td>${e.TBTL10}</td><td>${e.TBTL4}</td><td>${e.TC}</td></tr>`;
-        });
-        html+='</tbody></table>';
+    async function fetchScores(forceRefresh=false) {
+        if (!forceRefresh) {
+            let cached = loadScoresFromCache();
+            if (cached) {
+                renderScores(cached);
+                return;
+            }
+        }
+        scoresTable.innerHTML = 'Đang tải...';
+        try {
+            const response = await fetch('/api/scores');
+            const data = await response.json();
+            if (data.error) {
+                scoresTable.textContent = data.message;
+                return;
+            }
+            saveScoresToCache(data);
+            renderScores(data);
+        } catch (error) {
+            scoresTable.textContent = 'Không thể tải dữ liệu điểm.';
+        }
     }
-    if(!html) html = 'Không có dữ liệu điểm.';
-    document.getElementById('scores_table').innerHTML=html;
+
+    function renderScores(data) {
+        let html = '';
+        if(Array.isArray(data.diemSoData)) {
+            html += '<h5>Chi tiết điểm từng môn</h5>';
+            html += '<table class="table table-bordered"><thead><tr><th>STT</th><th>Mã học phần</th><th>Tên học phần</th><th>Số TC</th><th>CC</th><th>THI</th><th>KTHP</th><th>Điểm chữ</th><th>Đánh giá</th></tr></thead><tbody>';
+            data.diemSoData.forEach((e, i)=>{
+                html+=`<tr>
+                    <td>${i+1}</td>
+                    <td>${e.maHP}</td>
+                    <td>${e.tenHP}</td>
+                    <td>${e.soTC}</td>
+                    <td>${e.CC}</td>
+                    <td>${e.THI}</td>
+                    <td>${e.KTHP}</td>
+                    <td>${e.diemChu}</td>
+                    <td>${e.danhGia}</td>
+                </tr>`;
+            });
+            html+='</tbody></table>';
+        }
+        if(Array.isArray(data.tongKetData)) {
+            html += '<h5 class="mt-4">Tổng kết học tập</h5>';
+            html += '<table class="table table-striped"><thead><tr><th>Năm học</th><th>Học kỳ</th><th>TBC10</th><th>TBC4</th><th>TBTL10</th><th>TBTL4</th><th>TC</th></tr></thead><tbody>';
+            data.tongKetData.forEach(e=>{
+                html+=`<tr><td>${e.namHoc || ''}</td><td>${e.hocKy || ''}</td><td>${e.TBC10}</td><td>${e.TBC4}</td><td>${e.TBTL10}</td><td>${e.TBTL4}</td><td>${e.TC}</td></tr>`;
+            });
+            html+='</tbody></table>';
+        }
+        if(!html) html = 'Không có dữ liệu điểm.';
+        scoresTable.innerHTML = html;
+    }
+
+    if (refreshBtn) {
+        refreshBtn.onclick = function() {
+            clearScoresCache();
+            fetchScores(true);
+        };
+    }
+
+    fetchScores();
 });
 </script>
 </script>
