@@ -184,6 +184,17 @@
 </head>
 <body>
 <div class="container">
+<script>
+// Xóa cache điểm khi người dùng nhấn Đăng xuất từ bất kỳ trang nào
+document.addEventListener('DOMContentLoaded', function() {
+    var logoutBtn = document.querySelector('.btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('scores_cache');
+        });
+    }
+});
+</script>
     <div class="header">
         <h2 class="page-title">Bảng điểm</h2>
         <div class="button-group">
