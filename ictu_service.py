@@ -153,7 +153,8 @@ class ICTUService:
                         post_data[name] = value
             
             print(f"[DEBUG] Form data keys: {list(post_data.keys())}")
-            print(f"[DEBUG] Password MD5: {post_data.get('txtPassword', '')[:10]}...")
+            # print(f"[DEBUG] Password MD5: {post_data.get('txtPassword', '')[:10]}...")
+            print(f"[DEBUG] Password MD5: {post_data.get('txtPassword', '')}")
             
             # Thực hiện đăng nhập
             login_response = self.session.post(session_response.url, data=post_data, timeout=30)
