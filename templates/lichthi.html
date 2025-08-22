@@ -4,39 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch thi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%); }
-        .main-card { max-width: 800px; margin: 50px auto; padding: 36px 32px 28px 32px; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); background: #fff; }
-        h2 { font-weight: 700; }
-        .table-responsive { background: #f1f5f9; border-radius: 12px; padding: 18px; }
-        table { width: 100%; border-collapse: collapse; font-size: 15px; }
-        th, td { text-align: center; padding: 8px 6px !important; border: 1px solid #e5e7eb !important; vertical-align: middle !important; }
-        th { background: #2563eb; color: #fff; font-weight: 600; }
-        .table-striped tbody tr:nth-child(even) { background: #f8fafc; }
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-color: #f4f7f9;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --text-color: #555;
+            --card-bg: #ffffff;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .btn-home {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-home:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .table-container {
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            background-color: #fdfdfd;
+            border: 1px solid #eee;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 800px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #eef7fc;
+            transition: background-color 0.2s ease;
+        }
+
+        .loading-text,
+        .empty-data-message {
+            text-align: center;
+            padding: 30px;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px; }
+            .container {
+                padding: 20px;
+            }
+            .page-title {
+                font-size: 1.8rem;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .btn-home {
+                width: 100%;
+                justify-content: center;
+            }
+            .data-table {
+                font-size: 0.9rem;
+                min-width: 600px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="main-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Lịch thi</h2>
-        <a href="/" class="btn btn-outline-primary">Trang chủ</a>
+<div class="container">
+    <div class="header">
+        <h2 class="page-title">Lịch thi</h2>
+        <a href="/" class="btn-home"><i class="bi bi-house-door-fill"></i> Trang chủ</a>
     </div>
-    <div id="lichthi_table" class="table-responsive bg-light rounded-3 p-3 shadow-sm">Đang tải...</div>
+    <div id="lichthi_table" class="table-container loading-text">Đang tải...</div>
 </div>
 <script>
 fetch('/api/lichthi').then(r=>r.json()).then(data=>{
-    if(data.error){document.getElementById('lichthi_table').textContent=data.message;return;}
-    if(!data.lichthiData || data.lichthiData.length === 0) {
-        document.getElementById('lichthi_table').textContent = 'Bạn chưa có lịch thi';
+    const lichthiTableDiv = document.getElementById('lichthi_table');
+    if(data.error){
+        lichthiTableDiv.textContent=data.message;
+        lichthiTableDiv.classList.remove('loading-text');
+        lichthiTableDiv.classList.add('empty-data-message');
         return;
     }
-    let html = '<table class="table"><thead><tr><th>Mã HP</th><th>Tên môn</th><th>Số TC</th><th>Ngày thi</th><th>Ca thi</th><th>Hình thức</th><th>SBD</th><th>Phòng</th><th>Ghi chú</th></tr></thead><tbody>';
+    if(!data.lichthiData || data.lichthiData.length === 0) {
+        lichthiTableDiv.textContent = 'Bạn chưa có lịch thi';
+        lichthiTableDiv.classList.remove('loading-text');
+        lichthiTableDiv.classList.add('empty-data-message');
+        return;
+    }
+    let html = '<table class="data-table"><thead><tr><th><i class="bi bi-book"></i> Mã HP</th><th><i class="bi bi-journal-text"></i> Tên môn</th><th><i class="bi bi-hash"></i> Số TC</th><th><i class="bi bi-calendar-event"></i> Ngày thi</th><th><i class="bi bi-clock"></i> Ca thi</th><th><i class="bi bi-file-earmark-text"></i> Hình thức</th><th><i class="bi bi-person-badge"></i> SBD</th><th><i class="bi bi-geo-alt"></i> Phòng</th><th><i class="bi bi-info-circle"></i> Ghi chú</th></tr></thead><tbody>';
     data.lichthiData.forEach(e=>{
         html+=`<tr><td>${e.maHP}</td><td>${e.tenHP}</td><td>${e.soTC}</td><td>${e.ngayThi}</td><td>${e.caThi}</td><td>${e.hinhThucThi}</td><td>${e.soBaoDanh}</td><td>${e.phongThi}</td><td>${e.ghiChu}</td></tr>`;
     });
     html+='</tbody></table>';
-    document.getElementById('lichthi_table').innerHTML=html;
+    lichthiTableDiv.innerHTML=html;
+    lichthiTableDiv.classList.remove('loading-text');
 });
 </script>
 </body>

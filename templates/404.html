@@ -4,21 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Không tìm thấy trang</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { background: linear-gradient(120deg, #f8fafc 60%, #e0e7ff 100%); }
-        .main-card { max-width: 500px; margin: 80px auto; box-shadow: 0 4px 24px rgba(0,0,0,0.08); border-radius: 18px; background: #fff; padding: 40px 32px 32px 32px; text-align: center; }
-        .notfound-title { font-size: 3rem; font-weight: 700; color: #6366f1; }
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-color: #f4f7f9;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --text-color: #555;
+            --card-bg: #ffffff;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .error-container {
+            background-color: var(--card-bg);
+            padding: 50px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notfound-title {
+            font-size: 6rem;
+            font-weight: 800;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-heading {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .btn-home {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-home:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .error-container {
+                padding: 30px 20px;
+                margin: 0 15px;
+            }
+            .notfound-title {
+                font-size: 4.5rem;
+            }
+            .error-heading {
+                font-size: 1.8rem;
+            }
+            .error-message {
+                font-size: 1rem;
+            }
+            .btn-home {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="main-card">
+<div class="error-container">
     <div class="notfound-title">404</div>
-    <h2 class="mb-3">Không tìm thấy trang</h2>
-    <p class="mb-4">
+    <h2 class="error-heading">Không tìm thấy trang</h2>
+    <p class="error-message">
         Đường dẫn bạn truy cập không tồn tại.<br>Vui lòng kiểm tra lại hoặc quay về trang chủ.
     </p>
-    <a href="/" class="btn btn-primary">Về trang chủ</a>
+    <a href="/" class="btn-home"><i class="bi bi-house-door-fill"></i> Về trang chủ</a>
 </div>
 </body>
 </html>
