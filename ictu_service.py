@@ -195,17 +195,70 @@ class ICTUService:
                 name = student_text
                 student_id = "N/A"
             
-            # Lấy thông tin ngành (Major)
+            # Lấy thông tin ngành (Major) - thử nhiều cách để tăng độ chính xác
             major = "Chưa cập nhật"
-            # Thử tìm theo ID phổ biến hoặc cấu trúc tương tự
-            major_element = home_soup.find('span', {'id': 'lblNganh'}) # Giả định ID là lblNganh
-            if not major_element:
-                major_element = home_soup.find('span', text=re.compile(r'Ngành:')) # Thử tìm theo text "Ngành:"
-                if major_element:
-                    # Nếu tìm thấy span chứa text "Ngành:", lấy text của nó và cắt bỏ "Ngành:"
-                    major = major_element.get_text(strip=True).replace('Ngành:', '').strip()
-            else:
+            # 1. Theo id phổ biến
+            major_element = home_soup.find('span', {'id': 'lblNganh'})
+            if major_element and major_element.get_text(strip=True):
                 major = major_element.get_text(strip=True)
+            else:
+                # 2. Theo text chứa "Ngành:"
+                major_element = home_soup.find(lambda tag: tag.name in ['span','div','td'] and tag.get_text(strip=True).startswith('Ngành:'))
+                if major_element:
+                    major = major_element.get_text(strip=True).replace('Ngành:', '').strip()
+                else:
+                    # 3. Theo class phổ biến
+                    major_element = home_soup.find(class_=re.compile(r'nganh|major', re.I))
+                    if major_element and major_element.get_text(strip=True):
+                        major = major_element.get_text(strip=True)
+                    else:
+                        # 4. Theo thẻ td/th có text "Ngành" bên trái
+                        label_cell = home_soup.find(lambda tag: tag.name in ['td','th'] and 'ngành' in tag.get_text(strip=True).lower())
+                        if label_cell and label_cell.find_next_sibling(['td','th']):
+                            major = label_cell.find_next_sibling(['td','th']).get_text(strip=True)
+                        else:
+                            # 5. Theo bất kỳ span/div nào có text chứa "ngành"
+                            generic = home_soup.find(lambda tag: tag.name in ['span','div'] and 'ngành' in tag.get_text(strip=True).lower())
+                            if generic:
+                                # Lấy phần sau dấu : nếu có
+                                txt = generic.get_text(strip=True)
+                                if ':' in txt:
+                                    major = txt.split(':',1)[-1].strip()
+                                else:
+                                    major = txt.strip()
+
+            # Nếu vẫn chưa lấy được ngành, thử lấy từ trang TKB (StudentTimeTable.aspx)
+            if (not major or major == "Chưa cập nhật"):
+                try:
+                    timetable_url = f"{self.base_url}/Reports/Form/StudentTimeTable.aspx"
+                    timetable_response = self.session.get(timetable_url, timeout=15)
+                    if timetable_response.status_code == 200:
+                        timetable_soup = BeautifulSoup(timetable_response.text, 'html.parser')
+                        tkb_major = ""
+                        major_tag = timetable_soup.find(lambda tag: tag.name in ['span','div'] and 'ngành' in tag.get_text(strip=True).lower())
+                        if major_tag:
+                            txt = major_tag.get_text(strip=True)
+                            if ':' in txt:
+                                tkb_major = txt.split(':',1)[-1].strip()
+                            else:
+                                tkb_major = txt.strip()
+                        if not tkb_major:
+                            label_cell = timetable_soup.find(lambda tag: tag.name in ['td','th'] and 'ngành' in tag.get_text(strip=True).lower())
+                            if label_cell and label_cell.find_next_sibling(['td','th']):
+                                tkb_major = label_cell.find_next_sibling(['td','th']).get_text(strip=True)
+                        if tkb_major:
+                            # Loại bỏ mã sinh viên, tên sinh viên nếu có, chỉ lấy tên ngành
+                            # Ví dụ: "DTC245200672 - Nguyễn Anh Tuấn - Chuyên ngành Công nghệ thông tin" => "Công nghệ thông tin"
+                            if '-' in tkb_major:
+                                major = tkb_major.split('-')[-1].strip()
+                            else:
+                                major = tkb_major.strip()
+                            # Bỏ tiền tố "Chuyên ngành" nếu có
+                            if major.lower().startswith('chuyên ngành'):
+                                major = major[len('chuyên ngành'):].strip()
+                            print(f"[DEBUG] Extracted Major from TKB: {major}")
+                except Exception as e:
+                    print(f"[ERROR] Try get major from timetable failed: {e}")
             print(f"[DEBUG] Extracted Major: {major}")
 
             # Lấy thông tin thời gian học
