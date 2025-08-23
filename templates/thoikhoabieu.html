@@ -481,12 +481,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isCalendarView) {
             calendarDiv.style.display = '';
             cardListDiv.style.display = 'none';
-            toggleViewBtn.textContent = 'Xem TKB';
+            toggleViewBtn.innerHTML = '<i class="bi bi-list-task"></i> Xem TKB';
             if (refreshBtn) refreshBtn.style.display = 'none';
         } else {
             calendarDiv.style.display = 'none';
             cardListDiv.style.display = '';
-            toggleViewBtn.textContent = 'Xem lịch';
+            toggleViewBtn.innerHTML = '<i class="bi bi-calendar-week"></i> Xem lịch';
             if (refreshBtn) refreshBtn.style.display = '';
         }
     }
