@@ -475,16 +475,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendarDiv = document.getElementById('calendarYearContainer');
     const cardListDiv = document.getElementById('tkbCardList');
     const toggleViewBtn = document.getElementById('toggleViewBtn');
-    let isCalendarView = true;
+    const refreshBtn = document.getElementById('refreshTKB');
+    let isCalendarView = false;
     function updateViewToggle() {
         if (isCalendarView) {
             calendarDiv.style.display = '';
             cardListDiv.style.display = 'none';
             toggleViewBtn.textContent = 'Xem TKB';
+            if (refreshBtn) refreshBtn.style.display = 'none';
         } else {
             calendarDiv.style.display = 'none';
             cardListDiv.style.display = '';
             toggleViewBtn.textContent = 'Xem lịch';
+            if (refreshBtn) refreshBtn.style.display = '';
         }
     }
     if (toggleViewBtn) {
@@ -601,7 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     const tkbCardListDiv = document.getElementById('tkbCardList');
-    const refreshBtn = document.getElementById('refreshTKB');
     const tietModal = document.getElementById('tietModal');
     const openTietModalBtn = document.getElementById('openTietModal');
     const closeTietModalBtn = document.getElementById('closeTietModal');
@@ -743,14 +745,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Lấy dữ liệu và hiển thị, lọc theo năm/tháng
     async function fetchTimetable(forceRefresh=false) {
+        tkbCardListDiv.innerHTML = '<div class="loading-text">Đang tải...</div>';
         if (!forceRefresh) {
             let cached = loadTKBFromCache();
             if (cached) {
-                renderAllViews(cached);
+                // Hiển thị loading một chút rồi mới render (tránh nháy trắng)
+                setTimeout(() => { renderAllViews(cached); }, 200);
                 return;
             }
         }
-        tkbCardListDiv.innerHTML = '<div class="loading-text">Đang tải...</div>';
         try {
             const response = await fetch('/api/timetable');
             const data = await response.json();
