@@ -529,10 +529,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     let dateStr = `${year}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                     let isHasSchedule = hasScheduleSet.has(dateStr);
                     let style = '';
-                    let clickable = '';
-                    if(isToday) style += 'background:#3498db;color:#fff;font-weight:700;box-shadow:0 0 0 2px #3498db33;';
-                    else if(isHasSchedule) { style += 'background:#ffe066;color:#2c3e50;font-weight:700;border:1.5px solid #f9c846;cursor:pointer;'; clickable = `data-date='${dateStr}'`; }
-                    html += `<td style=\"padding:2px;\"><div style=\"width:28px;height:28px;line-height:28px;border-radius:50%;margin:auto;${style}\" ${clickable}>${d}</div></td>`;
+                    let cursor = 'pointer';
+                    if(isToday) {
+                        style += 'background:#3498db;color:#fff;font-weight:700;box-shadow:0 0 0 2px #3498db33;cursor:pointer;';
+                    } else if(isHasSchedule) {
+                        style += 'background:#ffe066;color:#2c3e50;font-weight:700;border:1.5px solid #f9c846;cursor:pointer;';
+                    } else {
+                        style += 'color:#222;cursor:pointer;';
+                    }
+                    html += `<td style=\"padding:2px;\"><div style=\"width:28px;height:28px;line-height:28px;border-radius:50%;margin:auto;${style}\" data-date='${dateStr}'>${d}</div></td>`;
                     d++;
                 }
                 html += '</tr>';
@@ -817,25 +822,33 @@ function showCalendarDayModal(dateStr) {
     if (!modal || !modalDate || !modalBody) return;
     modalDate.innerHTML = `<i class="bi bi-calendar-event" style="color:#3498db;margin-right:6px;"></i> ${formatDateVN(dateStr)}`;
     let data = (window._calendarScheduleByDate && window._calendarScheduleByDate[dateStr]) || [];
-    if (!data.length) {
-        modalBody.innerHTML = `<div style="padding:28px 10px;text-align:center;color:#27ae60;font-size:1.15rem;">
-            <i class="bi bi-emoji-smile" style="font-size:2.2rem;display:block;margin-bottom:8px;"></i>
-            Không có môn học nào trong ngày này.
-        </div>`;
+        if (!data.length) {
+            // Nếu là ngày hôm nay thì ghi rõ "Hôm nay bạn rảnh!"
+            let todayStr = new Date().toISOString().split('T')[0];
+            let isToday = dateStr === todayStr;
+            modalBody.innerHTML = `<div style="padding:38px 16px;text-align:center;background:#f6fbf7;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+                <i class="bi bi-emoji-smile" style="font-size:2.5rem;color:#27ae60;"></i>
+                <div style="font-size:1.22rem;font-weight:600;color:#27ae60;">${isToday ? 'Hôm nay bạn rảnh!' : 'Không có môn học nào trong ngày này.'}</div>
+            </div>`;
     } else {
-        modalBody.innerHTML = '<div style="display:flex;flex-direction:column;gap:14px;">' + data.map(e => {
+        modalBody.innerHTML = '<div style="display:flex;flex-direction:column;gap:26px;">' + data.map(e => {
             let subject = e.lopHocPhan || '';
             let teacher = e.giangVien || '';
             let session = e.buoiHoc || '';
             let room = e.phong || '';
             let tiet = e.tiet || '';
-            let tietDisplay = tiet ? `<span style=\"color:#2980b9;font-weight:500;\"><i class='bi bi-clock'></i> Tiết: ${tiet}</span>` : '';
-            let roomDisplay = room ? `<span style=\"color:#fff;background:#3498db;border-radius:5px;padding:2px 10px;margin-left:8px;font-weight:600;\"><i class='bi bi-geo-alt-fill'></i> ${room}</span>` : '';
-            return `<div style=\"border:1.5px solid #eaf6fb;border-radius:10px;padding:14px 16px;background:#fafdff;box-shadow:0 2px 8px #0001;display:flex;align-items:flex-start;gap:12px;\">
-                <div style=\"font-size:2.1rem;color:#3498db;flex-shrink:0;\"><i class='bi bi-journal-bookmark-fill'></i></div>
-                <div style=\"flex:1;\">
-                    <div style=\"font-size:1.13rem;font-weight:700;color:#2c3e50;\">${subject}</div>
-                    <div style=\"color:#555;font-size:0.98em;margin:3px 0 0 0;\"><i class='bi bi-person-fill'></i> GV: <b>${teacher}</b> ${tietDisplay} <span style=\"margin-left:8px;\"><i class='bi bi-sun'></i> Buổi: <b>${session}</b></span> ${roomDisplay}</div>
+            return `<div style=\"display:flex;align-items:stretch;background:#fafdff;border-radius:16px;box-shadow:0 4px 18px #0001;overflow:hidden;\">
+                <div style=\"width:8px;background:#3498db;\"></div>
+                <div style=\"flex:1;padding:18px 18px 14px 18px;display:flex;flex-direction:column;gap:10px;\">
+                    <div style=\"font-size:1.22rem;font-weight:700;color:#2c3e50;word-break:break-word;display:flex;align-items:center;gap:10px;\">
+                        <i class='bi bi-journal-bookmark-fill' style='color:#3498db;font-size:1.5rem;'></i> ${subject}
+                    </div>
+                    <div style=\"display:flex;flex-direction:column;gap:7px;\">
+                        <div style=\"color:#555;font-size:1.01em;display:flex;align-items:center;gap:8px;\"><i class='bi bi-person-fill'></i> <b>${teacher}</b></div>
+                        ${tiet ? `<div style=\"color:#2980b9;font-size:1em;display:flex;align-items:center;gap:8px;\"><i class='bi bi-clock'></i> Tiết: <b>${tiet}</b></div>` : ''}
+                        <div style=\"color:#555;font-size:1em;display:flex;align-items:center;gap:8px;\"><i class='bi bi-sun'></i> Buổi: <b>${session}</b></div>
+                        ${room ? `<div style=\"color:#fff;background:#3498db;border-radius:7px;padding:4px 14px;display:inline-flex;align-items:center;gap:7px;font-weight:600;width:max-content;\"><i class='bi bi-geo-alt-fill'></i> ${room}</div>` : ''}
+                    </div>
                 </div>
             </div>`;
         }).join('') + '</div>';
