@@ -9,6 +9,72 @@ import os
 from datetime import datetime, timedelta # Import datetime and timedelta
 
 class ICTUService:
+    def get_student_timetable(self, semester=None, academic_year=None, week=None):
+        """Lấy thời khóa biểu sinh viên từ trang HTML (fallback khi Excel lỗi)"""
+        try:
+            auth_check = self._ensure_logged_in()
+            if auth_check:
+                return auth_check
+
+            print(f"[DEBUG] Lấy thời khóa biểu từ HTML...")
+            timetable_url = f"{self.base_url}/Reports/Form/StudentTimeTable.aspx"
+            response = self.session.get(timetable_url, timeout=30, allow_redirects=True)
+            if response.status_code != 200:
+                return self._handle_error(f"Không thể truy cập trang thời khóa biểu (HTTP {response.status_code})", response.status_code)
+
+            soup = BeautifulSoup(response.text, 'html.parser')
+            table = soup.find('table', {'id': 'grdStudentTimeTable'})
+            if not table:
+                return self._handle_error("Không tìm thấy bảng thời khóa biểu trên trang HTML", 404)
+
+            headers = []
+            timetable_data = []
+            for i, row in enumerate(table.find_all('tr')):
+                cols = row.find_all(['td', 'th'])
+                col_text = [col.get_text(strip=True) for col in cols]
+                if i == 0:
+                    headers = col_text
+                else:
+                    if len(col_text) == len(headers):
+                        timetable_data.append(dict(zip(headers, col_text)))
+
+            # Chuẩn hóa dữ liệu trả về giống Excel
+            mapped_data = []
+            for item in timetable_data:
+                mapped_item = {
+                    "stt": item.get('STT', ''),
+                    "lopHocPhan": item.get('Lớp học phần', ''),
+                    "maHP": item.get('Mã HP', ''),
+                    "tenHP": item.get('Tên HP', ''),
+                    "soTC": item.get('Số TC', ''),
+                    "thu": item.get('Thứ', ''),
+                    "tiet": item.get('Tiết học', ''),
+                    "phong": item.get('Phòng', ''),
+                    "giangVien": item.get('Giảng viên', ''),
+                    "meetLink": '',
+                    "siSo": item.get('Sĩ số', ''),
+                    "soDK": item.get('Số ĐK', ''),
+                    "hocPhi": item.get('Học phí', ''),
+                    "ghiChu": item.get('Ghi chú', ''),
+                    "from_date": '',
+                    "to_date": '',
+                    "week_number": '',
+                    "lesson_type": ''
+                }
+                mapped_data.append(mapped_item)
+
+            return {
+                "error": False,
+                "timetableData": mapped_data,
+                "originalColumns": headers,
+                "source": "html",
+                "totalRows": len(mapped_data),
+                "major": ""
+            }
+        except Exception as e:
+            print(f"[ERROR] Timetable HTML exception: {str(e)}")
+            print(f"[ERROR] Traceback: {traceback.format_exc()}")
+            return self._handle_error("Error fetching timetable HTML fallback", 500)
     def __init__(self):
         self.base_url = "http://220.231.119.171/kcntt"
         self.session = requests.Session()
